@@ -1,7 +1,7 @@
 package dto
 
-// EmptyResponse 是一个用于表示没有返回数据的响应结构体
-type EmptyResponse struct{}
+// Empty 空结构体
+type Empty struct{}
 
 // Response 成功响应格式
 type Response struct {

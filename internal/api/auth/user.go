@@ -17,30 +17,46 @@ type UserApi struct{}
 // @Tags 用户管理
 // @Accept json
 // @Produce json
-// @Param request query auth.ListRequest true "请求参数"
-// @Success 200 {object} auth.ListResponse "成功获取用户列表"
+// @Param request body auth.ListUserRequest true "请求参数"
+// @Success 200 {object} auth.ListUserResponse "成功获取用户列表"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误"
 // @Router /auth/user [get]
-func (*UserApi) List(ctx *gin.Context, req *auth.ListRequest) (res *auth.ListResponse, err error) {
+func (*UserApi) List(ctx *gin.Context, req *auth.ListUserRequest) (res *auth.ListUserResponse, err error) {
 
 	// return nil, utils.NewBusinessError(utils.UserInvalidCredentialsCode)
 
 	redis.Client.Set(ctx, "long", "12312", -1)
-	data := make([]entity.Admin, 0)
+	data := make([]entity.Admins, 0)
 	db.Client.Scopes(db.PageScope(req.Page, req.PageSize)).Find(&data)
-	res = &auth.ListResponse{
+	res = &auth.ListUserResponse{
 		Total: 0,
-		Data:  make([]*auth.UserInfo, 0),
+		List:  make([]auth.UserInfo, 0),
 	}
 	for _, v := range data {
-		res.Data = append(res.Data, &auth.UserInfo{
-			ID:   v.ID,
-			Name: v.Username,
+		res.List = append(res.List, auth.UserInfo{
+			ID:       v.ID,
+			UserName: v.Username,
 		})
 	}
 	// 业务逻辑
 	return res, nil
+}
+
+// Info 获取用户信息
+// @Summary 查询用户详情
+// @Description 根据用户ID查询用户的详细信息，包括用户的基本信息和角色信息
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Param request body auth.InfoUserRequest true "查询用户的请求参数"
+// @Success 200 {object} auth.InfoUserResponse "成功返回用户详情"
+// @Failure 400 {object} dto.ErrorResponse "请求参数错误"
+// @Failure 500 {object} dto.ErrorResponse "服务器内部错误"
+// @Router /auth/user/info [get]
+func (*UserApi) Info(ctx *gin.Context, req *auth.InfoUserRequest) (res *auth.InfoUserResponse, err error) {
+	// 业务逻辑
+	return
 }
 
 // Add 添加用户
@@ -49,12 +65,12 @@ func (*UserApi) List(ctx *gin.Context, req *auth.ListRequest) (res *auth.ListRes
 // @Tags 用户管理
 // @Accept json
 // @Produce json
-// @Param request body auth.AddRequest true "请求参数"
-// @Success 200 {object} dto.EmptyResponse "成功添加用户"
+// @Param request body auth.AddUserRequest true "请求参数"
+// @Success 200 {object} dto.Empty "成功添加用户"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误"
 // @Router /auth/user [post]
-func (*UserApi) Add(ctx *gin.Context, req *auth.AddRequest) (res *dto.EmptyResponse, err error) {
+func (*UserApi) Add(ctx *gin.Context, req *auth.AddUserRequest) (res *dto.Empty, err error) {
 	// 业务逻辑
 	return
 }
@@ -65,12 +81,12 @@ func (*UserApi) Add(ctx *gin.Context, req *auth.AddRequest) (res *dto.EmptyRespo
 // @Tags 用户管理
 // @Accept json
 // @Produce json
-// @Param request body auth.EditRequest true "请求参数"
-// @Success 200 {object} dto.EmptyResponse "成功编辑用户"
+// @Param request body auth.EditUserRequest true "请求参数"
+// @Success 200 {object} dto.Empty "成功编辑用户"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误"
 // @Router /auth/user [put]
-func (*UserApi) Edit(ctx *gin.Context, req *auth.EditRequest) (res *dto.EmptyResponse, err error) {
+func (*UserApi) Edit(ctx *gin.Context, req *auth.EditUserRequest) (res *dto.Empty, err error) {
 	// 业务逻辑
 	return
 }
@@ -81,12 +97,12 @@ func (*UserApi) Edit(ctx *gin.Context, req *auth.EditRequest) (res *dto.EmptyRes
 // @Tags 用户管理
 // @Accept json
 // @Produce json
-// @Param request body auth.DelRequest true "请求参数"
-// @Success 200 {object} dto.EmptyResponse "成功删除用户"
+// @Param request body auth.DelUserRequest true "请求参数"
+// @Success 200 {object} dto.Empty "成功删除用户"
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误"
 // @Router /auth/user [delete]
-func (*UserApi) Del(ctx *gin.Context, req *auth.DelRequest) (res *dto.EmptyResponse, err error) {
+func (*UserApi) Del(ctx *gin.Context, req *auth.DelUserRequest) (res *dto.Empty, err error) {
 	// 业务逻辑
 	return
 }

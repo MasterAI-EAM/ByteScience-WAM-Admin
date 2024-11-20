@@ -11,6 +11,7 @@ import (
 func Register(router *gin.Engine) {
 	// 注册swagger路由
 	docs.SwaggerInfo.BasePath = "/v1"
+
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
 	// 加载v1的路由

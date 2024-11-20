@@ -87,8 +87,8 @@ type Redis struct {
 
 // Jwt 鉴权
 type Jwt struct {
-	AccessSecret string        `mapstructure:"accessSecret" json:"accessSecret" yaml:"accessSecret"`
-	AccessExpire time.Duration `mapstructure:"accessExpire" json:"accessExpire" yaml:"accessExpire"`
+	AccessSecret string `mapstructure:"accessSecret" json:"accessSecret" yaml:"accessSecret"`
+	AccessExpire int64  `mapstructure:"accessExpire" json:"accessExpire" yaml:"accessExpire"`
 }
 
 var GlobalConf *Server

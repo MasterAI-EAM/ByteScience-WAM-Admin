@@ -4,7 +4,6 @@ import (
 	"fmt"
 	"github.com/gin-gonic/gin"
 	"github.com/go-playground/validator/v10"
-	"net/http"
 )
 
 // bindAndValidate 处理请求的参数绑定和校验
@@ -12,15 +11,7 @@ func bindAndValidate[T any](ctx *gin.Context, method string) (*T, error) {
 	var req T
 	var err error
 
-	// 根据请求方法选择绑定方式
-	switch method {
-	case http.MethodGet:
-		err = ctx.ShouldBindQuery(&req)
-	case http.MethodPost, http.MethodPut, http.MethodDelete:
-		err = ctx.ShouldBindJSON(&req)
-	default:
-		return nil, fmt.Errorf("Method Not Allowed")
-	}
+	err = ctx.ShouldBindJSON(&req)
 
 	// 请求参数绑定失败
 	if err != nil {

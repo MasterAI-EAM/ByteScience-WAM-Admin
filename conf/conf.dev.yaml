@@ -15,7 +15,7 @@ system:
 
 
 # jwt 鉴权设置
-Auth:
+Jwt:
   accessSecret: ad879037-c7a4-4063-9236-6bfc35d54b7d  # jwt token的密钥
   accessExpire: 86400 # jwtToken 有效时间 单位：秒
 
