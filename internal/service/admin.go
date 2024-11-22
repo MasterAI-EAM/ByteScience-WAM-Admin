@@ -30,7 +30,7 @@ func (as *AdminService) Add(ctx context.Context, req *auth.AddAdminRequest) erro
 	if err != nil {
 		// 记录加密错误的详细信息
 		logger.Logger.Errorf("[AddAdmin] utils.EncryptPassword error: %v", err)
-		return utils.NewBusinessError(utils.PasswordGenerationFailedCode) // 错误码修改为密码生成失败
+		return utils.NewBusinessError(utils.PasswordGenerationFailedCode)
 	}
 
 	// 检查是否存在冲突的记录

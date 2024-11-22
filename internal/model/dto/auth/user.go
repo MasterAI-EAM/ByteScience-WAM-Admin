@@ -10,6 +10,10 @@ type AddUserRequest struct {
 	// 昵称是用户的可选名称，长度限制为128字符
 	Nickname string `json:"nickname" validate:"omitempty,max=128" example:"Nickname"`
 
+	// Password 密码，必填，长度限制
+	// 密码，且避免特殊字符，长度需满足最小值6字符，最大值32字符
+	Password string `json:"password" validate:"required,min=6,max=32" example:"oldpassword123"`
+
 	// Email 邮箱，必填，格式验证
 	// 邮箱格式必须合法，例如 "user@example.com"
 	Email string `json:"email" validate:"omitempty,email" example:"user@example.com"`
@@ -178,4 +182,15 @@ type TrimRoleInfo struct {
 
 	// Description 角色描述
 	Description string `json:"description" example:"Administrator role with full access"`
+}
+
+// ResetPasswordRequest 是用于重置用户密码的请求体结构
+type ResetPasswordRequest struct {
+	// ID 用户唯一标识，必填，UUID格式
+	// 该字段用于指定要重置密码的用户，格式必须为符合UUID规范的字符串，
+	ID string `json:"id" validate:"required,uuid4" example:"clywh0xv70001rvpgzd6256ns"`
+
+	// NewPassword 新密码，必填，长度限制及格式要求
+	// 新密码是要设置给用户的新的登录密码，长度需满足最小值6字符，最大值32字符
+	NewPassword string `json:"newPassword" validate:"required,min=6,max=32" example:"newpassword123"`
 }

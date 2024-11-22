@@ -15,7 +15,7 @@ func InitAuthRouter(routerGroup *gin.RouterGroup) {
 
 	authApi := auth.NewAuthApi()
 	{
-		utils.RegisterRoute(routerGroup, http.MethodPost, "/auth/login", authApi.Login)
+		utils.RegisterRoute(routerGroup, http.MethodPost, "/login", authApi.Login)
 		utils.RegisterRoute(routerGroup, http.MethodPut, "/changPassword", authApi.ChangPassword)
 	}
 
@@ -34,6 +34,7 @@ func InitAuthRouter(routerGroup *gin.RouterGroup) {
 		utils.RegisterRoute(authGroup, http.MethodPost, "/user", userApi.Add)
 		utils.RegisterRoute(authGroup, http.MethodPut, "/user", userApi.Edit)
 		utils.RegisterRoute(authGroup, http.MethodDelete, "/user", userApi.Del)
+		utils.RegisterRoute(authGroup, http.MethodPut, "/user/resetPassword", userApi.ResetPassword)
 
 		roleApi := auth.NewRoleApi()
 		utils.RegisterRoute(authGroup, http.MethodGet, "/role", roleApi.List)

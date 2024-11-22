@@ -43,6 +43,14 @@ func (us *UserService) checkUserExistence(ctx context.Context, userID string) (*
 
 // Add 添加用户
 func (us *UserService) Add(ctx context.Context, req *auth.AddUserRequest) error {
+	// 密码加密
+	hashedPassword, err := utils.EncryptPassword(req.Password)
+	if err != nil {
+		// 记录加密错误的详细信息
+		logger.Logger.Errorf("[AddAdmin] utils.EncryptPassword error: %v", err)
+		return utils.NewBusinessError(utils.PasswordGenerationFailedCode)
+	}
+
 	// 检查是否存在冲突的记录
 	conflictingUser, err := us.dao.GetByFields(ctx, req.UserName, req.Email, req.Phone)
 	if err != nil {
@@ -69,6 +77,7 @@ func (us *UserService) Add(ctx context.Context, req *auth.AddUserRequest) error 
 	user := &entity.Users{
 		ID:        uuid.New().String(),
 		Username:  req.UserName,
+		Password:  hashedPassword,
 		Nickname:  req.Nickname,
 		Email:     req.Email,
 		Phone:     req.Phone,
@@ -295,4 +304,34 @@ func (us *UserService) List(ctx context.Context, req *auth.ListUserRequest) (*au
 		Total: total,
 		List:  userList,
 	}, nil
+}
+
+// ResetPassword 重置用户密码
+func (us *UserService) ResetPassword(ctx context.Context, req *auth.ResetPasswordRequest) error {
+	// 检查用户是否存在
+	_, err := us.checkUserExistence(ctx, req.ID)
+	if err != nil {
+		return err
+	}
+
+	// 密码加密
+	hashedPassword, err := utils.EncryptPassword(req.NewPassword)
+	if err != nil {
+		// 记录加密错误的详细信息
+		logger.Logger.Errorf("[ResetPassword] utils.EncryptPassword error: %v", err)
+		return utils.NewBusinessError(utils.PasswordGenerationFailedCode)
+	}
+
+	// 更新用户密码信息
+	updates := map[string]interface{}{
+		entity.UsersColumns.Password:  hashedPassword,
+		entity.UsersColumns.UpdatedAt: time.Now(),
+	}
+
+	if err = us.dao.Update(ctx, req.ID, updates); err != nil {
+		logger.Logger.Errorf("[ResetPassword] Error updating user password: %v", err)
+		return utils.NewBusinessError(utils.PasswordResetFailedCode)
+	}
+
+	return nil
 }

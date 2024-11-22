@@ -96,3 +96,19 @@ func (api *UserApi) Del(ctx *gin.Context, req *auth.DelUserRequest) (res *dto.Em
 	err = api.service.Delete(ctx, req)
 	return
 }
+
+// ResetPassword 重置用户密码
+// @Summary 重置用户密码
+// @Description 根据提供的用户ID和新密码，重置指定用户的登录密码
+// @Tags 用户管理
+// @Accept json
+// @Produce json
+// @Param request body auth.ResetPasswordRequest true "请求参数，包含要重置密码的用户ID以及新密码"
+// @Success 200 {object} dto.Empty "成功重置用户密码，返回空对象表示操作成功"
+// @Failure 400 {object} dto.ErrorResponse "请求参数错误，如用户ID格式不正确、新密码不符合要求等"
+// @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是数据库更新出错、密码加密失败等情况"
+// @Router /auth/user/resetPassword [put]
+func (api *UserApi) ResetPassword(ctx *gin.Context, req *auth.ResetPasswordRequest) (res *dto.Empty, err error) {
+	err = api.service.ResetPassword(ctx, req)
+	return
+}
