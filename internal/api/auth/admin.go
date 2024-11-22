@@ -7,7 +7,16 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type AdminApi struct{}
+// AdminApi 结构体，保存服务和 DAO 实例
+type AdminApi struct {
+	service *service.AdminService
+}
+
+// NewAdminApi 创建 adminApi 实例并初始化依赖项
+func NewAdminApi() *AdminApi {
+	service := service.NewAdminService()
+	return &AdminApi{service: service}
+}
 
 // List 获取管理员列表
 // @Summary 获取管理员列表
@@ -20,8 +29,8 @@ type AdminApi struct{}
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，例如请求参数格式不正确或缺少必要参数"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是数据库查询出错、服务端逻辑异常等情况"
 // @Router /auth/admin [get]
-func (*AdminApi) List(ctx *gin.Context, req *auth.ListAdminRequest) (res *auth.ListAdminResponse, err error) {
-	res, err = service.GetAdminList(ctx, req)
+func (api *AdminApi) List(ctx *gin.Context, req *auth.ListAdminRequest) (res *auth.ListAdminResponse, err error) {
+	res, err = api.service.GetList(ctx, req)
 	return
 }
 
@@ -36,8 +45,8 @@ func (*AdminApi) List(ctx *gin.Context, req *auth.ListAdminRequest) (res *auth.L
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，如信息填写不完整、格式不正确等"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能在数据插入、权限设置等环节出现问题"
 // @Router /auth/admin [post]
-func (*AdminApi) Add(ctx *gin.Context, req *auth.AddAdminRequest) (res *dto.Empty, err error) {
-	err = service.AddAdmin(ctx, req)
+func (api *AdminApi) Add(ctx *gin.Context, req *auth.AddAdminRequest) (res *dto.Empty, err error) {
+	err = api.service.Add(ctx, req)
 	return
 }
 
@@ -52,8 +61,8 @@ func (*AdminApi) Add(ctx *gin.Context, req *auth.AddAdminRequest) (res *dto.Empt
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，如修改信息不完整、格式不正确或定位标识错误等"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能在数据更新、权限校验等环节出现问题"
 // @Router /auth/admin [put]
-func (*AdminApi) Edit(ctx *gin.Context, req *auth.EditAdminRequest) (res *dto.Empty, err error) {
-	err = service.EditAdmin(ctx, req)
+func (api *AdminApi) Edit(ctx *gin.Context, req *auth.EditAdminRequest) (res *dto.Empty, err error) {
+	err = api.service.Edit(ctx, req)
 	return
 }
 
@@ -68,7 +77,7 @@ func (*AdminApi) Edit(ctx *gin.Context, req *auth.EditAdminRequest) (res *dto.Em
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，如定位标识错误、缺少必要参数等"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能在数据删除、权限校验等环节出现问题"
 // @Router /auth/admin [delete]
-func (*AdminApi) Del(ctx *gin.Context, req *auth.DelAdminRequest) (res *dto.Empty, err error) {
-	err = service.DeleteAdmin(ctx, req)
+func (api *AdminApi) Del(ctx *gin.Context, req *auth.DelAdminRequest) (res *dto.Empty, err error) {
+	err = api.service.Delete(ctx, req)
 	return
 }

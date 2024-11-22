@@ -15,7 +15,7 @@ CREATE TABLE `paths` (
   `updated_at` timestamp NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   `deleted_at` timestamp NULL DEFAULT NULL COMMENT '软删除时间',
   PRIMARY KEY (`id`),
-  UNIQUE KEY `unique_path_method` (`path`,`method`),
+  UNIQUE KEY `unique_path_method` (`path`,`method`,`deleted_at`),
   KEY `paths_ibfk_1` (`menu_id`),
   CONSTRAINT `paths_ibfk_1` FOREIGN KEY (`menu_id`) REFERENCES `menus` (`id`) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci COMMENT='接口表'
@@ -29,7 +29,7 @@ type Paths struct {
 	MenuID      string    `gorm:"index:paths_ibfk_1;column:menu_id;type:char(36);not null" json:"menuId"`                                     // 菜单ID，指向menus表的ID
 	CreatedAt   time.Time `gorm:"column:created_at;type:timestamp;default:null;default:CURRENT_TIMESTAMP" json:"createdAt"`                   // 创建时间
 	UpdatedAt   time.Time `gorm:"column:updated_at;type:timestamp;default:null;default:CURRENT_TIMESTAMP" json:"updatedAt"`                   // 更新时间
-	DeletedAt   time.Time `gorm:"column:deleted_at;type:timestamp;default:null" json:"deletedAt"`                                             // 软删除时间
+	DeletedAt   time.Time `gorm:"uniqueIndex:unique_path_method;column:deleted_at;type:timestamp;default:null" json:"deletedAt"`              // 软删除时间
 }
 
 // TableName get sql table name.获取数据库表名

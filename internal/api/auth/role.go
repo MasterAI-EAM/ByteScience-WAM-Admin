@@ -3,10 +3,20 @@ package auth
 import (
 	"ByteScience-WAM-Admin/internal/model/dto"
 	"ByteScience-WAM-Admin/internal/model/dto/auth"
+	"ByteScience-WAM-Admin/internal/service"
 	"github.com/gin-gonic/gin"
 )
 
-type RoleApi struct{}
+// RoleApi 结构体，保存服务和 DAO 实例
+type RoleApi struct {
+	service *service.RoleService
+}
+
+// NewRoleApi 创建 RoleApi 实例并初始化依赖项
+func NewRoleApi() *RoleApi {
+	roleService := service.NewRoleService()
+	return &RoleApi{service: roleService}
+}
 
 // List 获取角色列表
 // @Summary 获取角色列表
@@ -19,7 +29,8 @@ type RoleApi struct{}
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，例如请求参数格式不正确或缺少必要参数"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是数据库查询出错、服务端逻辑异常等情况"
 // @Router /role/list [get]
-func (*RoleApi) List(ctx *gin.Context, req *auth.ListRoleRequest) (res *auth.ListRoleResponse, err error) {
+func (api *RoleApi) List(ctx *gin.Context, req *auth.ListRoleRequest) (res *auth.ListRoleResponse, err error) {
+	res, err = api.service.List(ctx, req)
 	return
 }
 
@@ -34,7 +45,8 @@ func (*RoleApi) List(ctx *gin.Context, req *auth.ListRoleRequest) (res *auth.Lis
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，例如标识信息错误、格式不正确等"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能是数据库查询出错、服务端逻辑异常等情况"
 // @Router /auth/role/info [get]
-func (*RoleApi) Info(ctx *gin.Context, req *auth.InfoRoleRequest) (res *auth.InfoRoleResponse, err error) {
+func (api *RoleApi) Info(ctx *gin.Context, req *auth.InfoRoleRequest) (res *auth.InfoRoleResponse, err error) {
+	res, err = api.service.Info(ctx, req)
 	return
 }
 
@@ -49,7 +61,8 @@ func (*RoleApi) Info(ctx *gin.Context, req *auth.InfoRoleRequest) (res *auth.Inf
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，如信息填写不完整、格式不正确等"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能在数据插入、权限设置等环节出现问题"
 // @Router /auth/role [post]
-func (*RoleApi) Add(ctx *gin.Context, req *auth.AddRoleRequest) (res *dto.Empty, err error) {
+func (api *RoleApi) Add(ctx *gin.Context, req *auth.AddRoleRequest) (res *dto.Empty, err error) {
+	err = api.service.Add(ctx, req)
 	return
 }
 
@@ -64,7 +77,8 @@ func (*RoleApi) Add(ctx *gin.Context, req *auth.AddRoleRequest) (res *dto.Empty,
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，如修改信息不完整、格式不正确或定位标识错误等"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能在数据更新、权限校验等环节出现问题"
 // @Router /auth/role [put]
-func (*RoleApi) Edit(ctx *gin.Context, req *auth.EditRoleRequest) (res *dto.Empty, err error) {
+func (api *RoleApi) Edit(ctx *gin.Context, req *auth.EditRoleRequest) (res *dto.Empty, err error) {
+	err = api.service.Edit(ctx, req)
 	return
 }
 
@@ -79,6 +93,7 @@ func (*RoleApi) Edit(ctx *gin.Context, req *auth.EditRoleRequest) (res *dto.Empt
 // @Failure 400 {object} dto.ErrorResponse "请求参数错误，如定位标识错误、缺少必要参数等"
 // @Failure 500 {object} dto.ErrorResponse "服务器内部错误，可能在数据删除、权限校验等环节出现问题"
 // @Router /auth/role [delete]
-func (*RoleApi) Del(ctx *gin.Context, req *auth.DelRoleRequest) (res *dto.Empty, err error) {
+func (api *RoleApi) Del(ctx *gin.Context, req *auth.DelRoleRequest) (res *dto.Empty, err error) {
+	err = api.service.Delete(ctx, req)
 	return
 }

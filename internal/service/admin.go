@@ -12,8 +12,19 @@ import (
 	"github.com/google/uuid"
 )
 
-// AddAdmin 添加管理员
-func AddAdmin(ctx context.Context, req *auth.AddAdminRequest) error {
+type AdminService struct {
+	dao *dao.AdminDao // 添加 AdminDao 作为成员
+}
+
+// NewAdminService 创建一个新的 AdminService 实例
+func NewAdminService() *AdminService {
+	return &AdminService{
+		dao: dao.NewAdminDao(),
+	}
+}
+
+// Add 添加管理员
+func (as *AdminService) Add(ctx context.Context, req *auth.AddAdminRequest) error {
 	// 密码加密
 	hashedPassword, err := utils.EncryptPassword(req.Password)
 	if err != nil {
@@ -23,7 +34,7 @@ func AddAdmin(ctx context.Context, req *auth.AddAdminRequest) error {
 	}
 
 	// 检查是否存在冲突的记录
-	conflictingAdmin, err := dao.GetAdminByFields(ctx, req.UserName, req.Email, req.Phone)
+	conflictingAdmin, err := as.dao.GetByFields(ctx, req.UserName, req.Email, req.Phone)
 	if err != nil {
 		logger.Logger.Errorf("[AddAdmin] Error checking admin conflicts: %v", err)
 		return err
@@ -59,7 +70,7 @@ func AddAdmin(ctx context.Context, req *auth.AddAdminRequest) error {
 	}
 
 	// 调用 DAO 层插入数据
-	if err = dao.InsertAdmin(ctx, admin); err != nil {
+	if err = as.dao.Insert(ctx, admin); err != nil {
 		// 记录插入数据库的错误
 		logger.Logger.Errorf("[AddAdmin] Error inserting admin into DB: %v", err)
 		return utils.NewBusinessError(utils.AdminInsertFailedCode) // 新增错误码 AdminInsertFailedCode
@@ -68,10 +79,10 @@ func AddAdmin(ctx context.Context, req *auth.AddAdminRequest) error {
 	return nil
 }
 
-// EditAdmin 编辑管理员信息
-func EditAdmin(ctx context.Context, req *auth.EditAdminRequest) error {
+// Edit 编辑管理员信息
+func (as *AdminService) Edit(ctx context.Context, req *auth.EditAdminRequest) error {
 	// 确保管理员存在
-	admin, err := dao.GetAdminByID(ctx, req.ID)
+	admin, err := as.dao.GetByID(ctx, req.ID)
 	if err != nil {
 		logger.Logger.Errorf("[EditAdmin] Error fetching admin by ID: %v", err)
 		return err
@@ -81,7 +92,7 @@ func EditAdmin(ctx context.Context, req *auth.EditAdminRequest) error {
 	}
 
 	// 检查是否存在冲突的记录
-	conflictingAdmin, err := dao.GetAdminByFields(ctx, req.UserName, req.Email, req.Phone)
+	conflictingAdmin, err := as.dao.GetByFields(ctx, req.UserName, req.Email, req.Phone)
 	if err != nil {
 		logger.Logger.Errorf("[EditAdmin] Error checking admin conflicts: %v", err)
 		return err
@@ -114,7 +125,7 @@ func EditAdmin(ctx context.Context, req *auth.EditAdminRequest) error {
 	}
 
 	// 调用 DAO 层更新数据
-	if err = dao.UpdateAdmin(ctx, req.ID, updates); err != nil {
+	if err = as.dao.Update(ctx, req.ID, updates); err != nil {
 		// 记录更新管理员信息时的错误
 		logger.Logger.Errorf("[EditAdmin] Error updating admin info in DB: %v", err)
 		return utils.NewBusinessError(utils.AdminUpdateFailedCode)
@@ -123,10 +134,10 @@ func EditAdmin(ctx context.Context, req *auth.EditAdminRequest) error {
 	return nil
 }
 
-// DeleteAdmin 软删除管理员
-func DeleteAdmin(ctx context.Context, req *auth.DelAdminRequest) error {
+// Delete 软删除管理员
+func (as *AdminService) Delete(ctx context.Context, req *auth.DelAdminRequest) error {
 	// 确保管理员存在
-	admin, err := dao.GetAdminByID(ctx, req.ID)
+	admin, err := as.dao.GetByID(ctx, req.ID)
 	if err != nil {
 		logger.Logger.Errorf("[DeleteAdmin] Error fetching admin by ID: %v", err)
 		return err
@@ -136,7 +147,7 @@ func DeleteAdmin(ctx context.Context, req *auth.DelAdminRequest) error {
 	}
 
 	// 调用 DAO 层进行软删除
-	if err = dao.SoftDeleteAdminByID(ctx, req.ID); err != nil {
+	if err = as.dao.SoftDeleteByID(ctx, req.ID); err != nil {
 		// 记录软删除操作错误
 		logger.Logger.Errorf("[DeleteAdmin] Error soft deleting admin: %v", err)
 		return utils.NewBusinessError(utils.AdminDeleteFailedCode)
@@ -145,8 +156,8 @@ func DeleteAdmin(ctx context.Context, req *auth.DelAdminRequest) error {
 	return nil
 }
 
-// GetAdminList 获取管理员列表（分页）
-func GetAdminList(ctx context.Context, req *auth.ListAdminRequest) (*auth.ListAdminResponse, error) {
+// GetList 获取管理员列表（分页）
+func (as *AdminService) GetList(ctx context.Context, req *auth.ListAdminRequest) (*auth.ListAdminResponse, error) {
 	// 构建过滤条件
 	filters := map[string]interface{}{
 		entity.AdminsColumns.ID:       req.ID,
@@ -156,7 +167,7 @@ func GetAdminList(ctx context.Context, req *auth.ListAdminRequest) (*auth.ListAd
 	}
 
 	// 查询数据
-	admins, total, err := dao.QueryAdmins(ctx, req.Page, req.PageSize, filters)
+	admins, total, err := as.dao.Query(ctx, req.Page, req.PageSize, filters)
 	if err != nil {
 		// 查询失败时返回具体的业务错误
 		logger.Logger.Errorf("[GetAdminList] Error fetching admins: %v", err)
@@ -186,9 +197,9 @@ func GetAdminList(ctx context.Context, req *auth.ListAdminRequest) (*auth.ListAd
 }
 
 // UpdateLastLoginTime 更新管理员的最后登录时间
-func UpdateLastLoginTime(ctx context.Context, id string) error {
+func (as *AdminService) UpdateLastLoginTime(ctx context.Context, id string) error {
 	// 确保管理员存在
-	admin, err := dao.GetAdminByID(ctx, id)
+	admin, err := as.dao.GetByID(ctx, id)
 	if err != nil {
 		return err
 	}
@@ -197,5 +208,5 @@ func UpdateLastLoginTime(ctx context.Context, id string) error {
 	}
 
 	// 调用 DAO 层更新最后登录时间
-	return dao.UpdateLastLoginTime(ctx, id)
+	return as.dao.UpdateLastLoginTime(ctx, id)
 }

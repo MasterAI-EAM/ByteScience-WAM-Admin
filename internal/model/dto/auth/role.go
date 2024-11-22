@@ -42,11 +42,7 @@ type AddRoleRequest struct {
 
 	// Status 角色状态，必填，1表示启用，0表示禁用
 	// 如果未明确设置，则角色默认为启用
-	Status int `json:"status" validate:"required,oneof=0 1" example:"1"`
-
-	// Remark 备注，选填，最大长度256字符
-	// 用于对角色进行描述或标记
-	Remark string `json:"remark" validate:"omitempty,max=256" example:"This is a remark"`
+	Status int8 `json:"status" validate:"required,oneof=0 1" example:"1"`
 
 	// PathIDList 路径ID列表，选填，用于指定该角色能够访问的路径
 	// 角色可以访问多个路径，路径ID是与路径表中的路径关联的
@@ -70,11 +66,7 @@ type EditRoleRequest struct {
 
 	// Status 角色状态，选填，1表示启用，0表示禁用
 	// 如果需要修改角色的启用/禁用状态，则需要提供，1表示启用，0表示禁用
-	Status int `json:"status" validate:"omitempty,oneof=0 1" example:"1"`
-
-	// Remark 备注，选填，最大长度256字符
-	// 用于对角色进行附加描述或标记
-	Remark string `json:"remark" validate:"omitempty,max=256" example:"This is a remark"`
+	Status int8 `json:"status" validate:"omitempty,oneof=0 1" example:"1"`
 
 	// PathIDList 路径ID列表，选填，用于指定该角色能够访问的路径
 	// 角色可以访问多个路径，路径ID是与路径表中的路径关联的
@@ -112,7 +104,7 @@ type RoleInfo struct {
 
 	// Status 角色状态
 	// 1表示启用，0表示禁用
-	Status int `json:"status" example:"1"`
+	Status int8 `json:"status" example:"1"`
 
 	// CreatedAt 角色创建时间
 	// 格式为时间戳，标识角色的创建时间
@@ -138,7 +130,7 @@ type InfoRoleResponse struct {
 
 	// Status 角色状态
 	// 1表示启用，0表示禁用
-	Status int `json:"status" example:"1"`
+	Status int8 `json:"status" example:"1"`
 
 	// CreatedAt 角色创建时间
 	// 格式为时间戳，标识角色的创建时间
@@ -149,5 +141,27 @@ type InfoRoleResponse struct {
 	UpdatedAt string `json:"updatedAt" example:"2024-11-18T11:00:00Z"`
 
 	// MenuData 是菜单树数据
-	MenuData []*MenuNode `json:"menuData"`
+	MenuData []*RoleMenuNode `json:"menuData"`
+}
+
+// RoleMenuNode 表示带角色权限的菜单及其子菜单
+type RoleMenuNode struct {
+	BaseNode
+
+	// IsPermitted 当前角色是否有该菜单权限
+	IsPermitted bool `json:"isPermitted" example:"false"`
+
+	// MenuData 子菜单列表
+	MenuData []*RoleMenuNode `json:"menuData,omitempty"`
+
+	// Paths 菜单下的路径信息
+	Paths []*RolePathInfo `json:"paths,omitempty"`
+}
+
+// RolePathInfo 表示带角色权限的路径信息
+type RolePathInfo struct {
+	PathInfo
+
+	// IsPermitted 当前角色是否有该菜单权限
+	IsPermitted bool `json:"isPermitted" example:"false"`
 }

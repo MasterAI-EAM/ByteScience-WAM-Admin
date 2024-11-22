@@ -6,6 +6,10 @@ type AddUserRequest struct {
 	// 必须是唯一的，建议使用字母数字组合，避免特殊字符
 	UserName string `json:"userName" validate:"required,min=3,max=128" example:"user1"`
 
+	// Nickname 昵称，选填，最大长度128字符
+	// 昵称是用户的可选名称，长度限制为128字符
+	Nickname string `json:"nickname" validate:"omitempty,max=128" example:"Nickname"`
+
 	// Email 邮箱，必填，格式验证
 	// 邮箱格式必须合法，例如 "user@example.com"
 	Email string `json:"email" validate:"omitempty,email" example:"user@example.com"`
@@ -16,7 +20,7 @@ type AddUserRequest struct {
 
 	// Status 用户状态，必填，1表示启用，0表示禁用
 	// 如果未明确设置，则用户默认为启用
-	Status int `json:"status" validate:"required,oneof=0 1" example:"1"`
+	Status int8 `json:"status" validate:"required,oneof=0 1" example:"1"`
 
 	// Remark 备注，选填，最大长度256字符
 	// 用于对用户进行描述或标记
@@ -34,6 +38,14 @@ type EditUserRequest struct {
 	// 该字段用于指定要编辑的用户，格式必须为UUID
 	ID string `json:"id" validate:"required,uuid4" example:"clywh0xv70001rvpgzd6256ns"`
 
+	// UserName 用户名，选填，长度限制为3-128字符
+	// 用户名必须唯一，且避免特殊字符，长度需满足最小值3字符，最大值128字符
+	UserName string `json:"userName" validate:"omitempty,min=3,max=128" example:"user1"`
+
+	// Nickname 昵称，选填，最大长度128字符
+	// 昵称是用户的可选名称，长度限制为128字符
+	Nickname string `json:"nickname" validate:"omitempty,max=128" example:"Nickname"`
+
 	// Email 邮箱，选填，格式验证
 	// 仅在修改邮箱时需要传递，格式必须符合标准邮箱格式
 	Email string `json:"email" validate:"omitempty,email" example:"user@example.com"`
@@ -44,7 +56,7 @@ type EditUserRequest struct {
 
 	// Status 用户状态，必填，1表示启用，0表示禁用
 	// 如果没有修改状态，可以使用原值
-	Status int `json:"status" validate:"required,oneof=0 1" example:"1"`
+	Status int8 `json:"status" validate:"required,oneof=0 1" example:"1"`
 
 	// Remark 备注，选填，最大长度256字符
 	// 用于更新用户备注信息
@@ -98,7 +110,7 @@ type ListUserRequest struct {
 
 	// Status 用户状态，选填，1表示启用，0表示禁用
 	// 用于根据用户状态进行过滤查询
-	Status int `json:"status" validate:"omitempty,oneof=0 1" example:"1"`
+	Status *int8 `json:"status" validate:"omitempty,oneof=0 1" example:"1"`
 }
 
 type ListUserResponse struct {
@@ -113,12 +125,14 @@ type UserInfo struct {
 	ID string `json:"id" example:"clywh0xv70001rvpgzd6256ns"`
 	// UserName string 用户名
 	UserName string `json:"userName" example:"user1"`
+	// Nickname string 昵称
+	Nickname string `json:"nickname" example:"Nickname"`
 	// Email string 邮箱
 	Email string `json:"email" example:"user@example.com"`
 	// Phone string 手机号码
 	Phone string `json:"phone" example:"+1234567890"`
 	// Status int 状态(1: 启用, 0: 禁用)
-	Status int `json:"status" example:"1"`
+	Status int8 `json:"status" example:"1"`
 	// Remark string 备注
 	Remark string `json:"remark" example:"This is a remark"`
 	// LastLoginAt string 上次登录时间
@@ -134,12 +148,14 @@ type InfoUserResponse struct {
 	ID string `json:"id" example:"clywh0xv70001rvpgzd6256ns"`
 	// UserName string 用户名
 	UserName string `json:"userName" example:"user1"`
+	// Nickname string 昵称
+	Nickname string `json:"nickname" example:"Nickname"`
 	// Email string 邮箱
 	Email string `json:"email" example:"user@example.com"`
 	// Phone string 手机号码
 	Phone string `json:"phone" example:"+1234567890"`
 	// Status int 状态(1: 启用, 0: 禁用)
-	Status int `json:"status" example:"1"`
+	Status int8 `json:"status" example:"1"`
 	// Remark string 备注
 	Remark string `json:"remark" example:"This is a remark"`
 	// LastLoginAt string 上次登录时间

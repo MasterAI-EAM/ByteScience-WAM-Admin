@@ -6,34 +6,30 @@ type MenuTreeResponse struct {
 	Data []*MenuNode `json:"data"`
 }
 
-// MenuNode 是菜单节点，用于表示一个菜单及其子菜单和相关路径
-type MenuNode struct {
-	// ID 菜单ID
+// BaseNode 定义菜单和路径的公共字段
+type BaseNode struct {
+	// ID 节点ID
 	ID string `json:"id" example:"clywh0xv70001rvpgzd6256ns"`
 
-	// ParentID 父菜单ID，根菜单的 ParentID 为 null
+	// ParentID 父节点ID，根节点的 ParentID 为 null
 	ParentID string `json:"parent_id" example:"null"`
 
-	// Name 菜单名称
+	// Name 节点名称
 	Name string `json:"name" example:"Dashboard"`
+}
 
-	// CreatedAt 创建时间
-	CreatedAt string `json:"createdAt" example:"2024-11-18T10:00:00Z"`
+// MenuNode 表示菜单及其子菜单
+type MenuNode struct {
+	BaseNode
 
-	// UpdatedAt 更新时间
-	UpdatedAt string `json:"updatedAt" example:"2024-11-18T10:00:00Z"`
-
-	// DeletedAt 软删除时间
-	DeletedAt string `json:"deletedAt" example:"null"`
-
-	// SubMenus 子菜单列表，包含所有直接的子菜单
-	SubMenus []*MenuNode `json:"subMenus,omitempty"`
+	// MenuData 子菜单列表
+	MenuData []*MenuNode `json:"menuData,omitempty"`
 
 	// Paths 菜单下的路径信息
 	Paths []*PathInfo `json:"paths,omitempty"`
 }
 
-// PathInfo 是菜单下的路径信息，用于表示与该菜单关联的接口
+// PathInfo 表示菜单下的路径信息
 type PathInfo struct {
 	// Path 路由路径
 	Path string `json:"path" example:"/dashboard"`

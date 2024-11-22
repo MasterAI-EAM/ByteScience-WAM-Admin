@@ -19,3 +19,13 @@ func IdentifyType(identifier string) string {
 	// 如果都不匹配，默认为用户名
 	return "username"
 }
+
+// Contains 判断切片是否包含某个元素，支持多种类型
+func Contains[T comparable](slice []T, value T) bool {
+	for _, v := range slice {
+		if v == value {
+			return true
+		}
+	}
+	return false
+}

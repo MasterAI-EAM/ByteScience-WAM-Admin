@@ -1,6 +1,7 @@
 package dao
 
 import (
+	"ByteScience-WAM-Admin/internal/utils"
 	"ByteScience-WAM-Admin/pkg/db"
 	"context"
 	"errors"
@@ -11,13 +12,21 @@ import (
 	"gorm.io/gorm"
 )
 
-// InsertAdmin 插入管理员记录
-func InsertAdmin(ctx context.Context, admin *entity.Admins) error {
+// AdminDao 数据访问对象，封装角色相关操作
+type AdminDao struct{}
+
+// NewAdminDao 创建一个新的 AdminDao 实例
+func NewAdminDao() *AdminDao {
+	return &AdminDao{}
+}
+
+// Insert 插入管理员记录
+func (ad *AdminDao) Insert(ctx context.Context, admin *entity.Admins) error {
 	return db.Client.WithContext(ctx).Create(admin).Error
 }
 
-// GetAdminByID 根据 ID 获取管理员
-func GetAdminByID(ctx context.Context, id string) (*entity.Admins, error) {
+// GetByID 根据 ID 获取管理员
+func (ad *AdminDao) GetByID(ctx context.Context, id string) (*entity.Admins, error) {
 	var admin entity.Admins
 	err := db.Client.WithContext(ctx).
 		Where(entity.AdminsColumns.ID+" = ?", id).
@@ -29,7 +38,8 @@ func GetAdminByID(ctx context.Context, id string) (*entity.Admins, error) {
 	return &admin, err
 }
 
-func GetAdminByFields(ctx context.Context, username, email, phone string) (*entity.Admins, error) {
+// GetByFields 根据 username, email, phone 获取管理员
+func (ad *AdminDao) GetByFields(ctx context.Context, username, email, phone string) (*entity.Admins, error) {
 	// 构建查询条件
 	// 基础查询，确保 deleted_at 为 NULL
 	query := db.Client.WithContext(ctx).Model(&entity.Admins{}).
@@ -70,8 +80,8 @@ func GetAdminByFields(ctx context.Context, username, email, phone string) (*enti
 	return &admin, nil
 }
 
-// UpdateAdmin 更新管理员信息
-func UpdateAdmin(ctx context.Context, id string, updates map[string]interface{}) error {
+// Update 更新管理员信息
+func (ad *AdminDao) Update(ctx context.Context, id string, updates map[string]interface{}) error {
 	return db.Client.WithContext(ctx).
 		Model(&entity.Admins{}).
 		Where(entity.AdminsColumns.ID+" = ?", id).
@@ -79,8 +89,8 @@ func UpdateAdmin(ctx context.Context, id string, updates map[string]interface{})
 		Error
 }
 
-// SoftDeleteAdminByID 软删除管理员记录
-func SoftDeleteAdminByID(ctx context.Context, id string) error {
+// SoftDeleteByID 软删除管理员记录
+func (ad *AdminDao) SoftDeleteByID(ctx context.Context, id string) error {
 	return db.Client.WithContext(ctx).
 		Model(&entity.Admins{}).
 		Where(entity.AdminsColumns.ID+" = ?", id).
@@ -88,21 +98,27 @@ func SoftDeleteAdminByID(ctx context.Context, id string) error {
 		Error
 }
 
-// QueryAdmins 分页查询管理员
-func QueryAdmins(ctx context.Context, page int, pageSize int, filters map[string]interface{}) ([]*entity.Admins, int64, error) {
+// Query 分页查询管理员
+func (ad *AdminDao) Query(ctx context.Context, page int, pageSize int,
+	filters map[string]interface{}) ([]*entity.Admins, int64, error) {
 	var (
 		admins []*entity.Admins
 		total  int64
 	)
+
+	// 定义需要使用 LIKE 查询的字段
+	likeFields := []string{
+		entity.AdminsColumns.Username,
+		entity.AdminsColumns.Phone,
+		entity.AdminsColumns.Email,
+	}
 
 	query := db.Client.WithContext(ctx).Model(&entity.Admins{}).Where(entity.AdminsColumns.DeletedAt + " IS NULL")
 
 	// 应用过滤条件
 	for key, value := range filters {
 		if value != nil && value != "" {
-			if key == entity.AdminsColumns.Username ||
-				key == entity.AdminsColumns.Phone ||
-				key == entity.AdminsColumns.Email {
+			if utils.Contains(likeFields, key) {
 				query = query.Where(key+" LIKE ?", value.(string)+"%")
 			} else {
 				query = query.Where(key+" = ?", value)
@@ -126,7 +142,7 @@ func QueryAdmins(ctx context.Context, page int, pageSize int, filters map[string
 }
 
 // UpdateLastLoginTime 更新管理员的最后登录时间
-func UpdateLastLoginTime(ctx context.Context, id string) error {
+func (ad *AdminDao) UpdateLastLoginTime(ctx context.Context, id string) error {
 	return db.Client.WithContext(ctx).
 		Model(&entity.Admins{}).
 		Where(entity.AdminsColumns.ID+" = ?", id).

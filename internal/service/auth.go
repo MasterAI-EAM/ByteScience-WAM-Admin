@@ -11,8 +11,19 @@ import (
 	"time"
 )
 
+type AuthService struct {
+	adminDao *dao.AdminDao // 添加 AdminDao 作为成员
+}
+
+// NewAuthService 创建一个新的 AuthService 实例
+func NewAuthService() *AuthService {
+	return &AuthService{
+		adminDao: dao.NewAdminDao(),
+	}
+}
+
 // Login 登录方法
-func Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
+func (as AuthService) Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, error) {
 	// 确定 Identifier 类型（用户名、邮箱或手机号）
 	identifierType := utils.IdentifyType(req.Identifier)
 	var admin *entity.Admins
@@ -20,11 +31,11 @@ func Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, er
 
 	switch identifierType {
 	case "email":
-		admin, err = dao.GetAdminByFields(ctx, "", req.Identifier, "")
+		admin, err = as.adminDao.GetByFields(ctx, "", req.Identifier, "")
 	case "phone":
-		admin, err = dao.GetAdminByFields(ctx, "", "", req.Identifier)
+		admin, err = as.adminDao.GetByFields(ctx, "", "", req.Identifier)
 	default:
-		admin, err = dao.GetAdminByFields(ctx, req.Identifier, "", "")
+		admin, err = as.adminDao.GetByFields(ctx, req.Identifier, "", "")
 	}
 
 	// 检查用户是否存在
@@ -55,6 +66,11 @@ func Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, er
 		return nil, utils.NewBusinessError(utils.InternalError)
 	}
 
+	// 记录登陆时间
+	if err = as.adminDao.UpdateLastLoginTime(ctx, admin.ID); err != nil {
+		logger.Logger.Errorf("[Login] Error UpdateLastLoginTime: %v", err)
+	}
+
 	// 返回登录响应
 	loginResponse := &auth.LoginResponse{
 		Token: token,
@@ -64,7 +80,7 @@ func Login(ctx context.Context, req *auth.LoginRequest) (*auth.LoginResponse, er
 }
 
 // ChangePassword 修改用户密码
-func ChangePassword(ctx context.Context, req *auth.ChangePasswordRequest) error {
+func (as AuthService) ChangePassword(ctx context.Context, req *auth.ChangePasswordRequest) error {
 	// 检查确认密码是否匹配新密码（额外保险，即使已通过验证器）
 	if req.NewPassword != req.ConfirmPassword {
 		return utils.NewBusinessError(utils.PasswordMismatchCode)
@@ -82,11 +98,11 @@ func ChangePassword(ctx context.Context, req *auth.ChangePasswordRequest) error 
 
 	switch identifierType {
 	case "email":
-		admin, err = dao.GetAdminByFields(ctx, "", req.Identifier, "")
+		admin, err = as.adminDao.GetByFields(ctx, "", req.Identifier, "")
 	case "phone":
-		admin, err = dao.GetAdminByFields(ctx, "", "", req.Identifier)
+		admin, err = as.adminDao.GetByFields(ctx, "", "", req.Identifier)
 	default:
-		admin, err = dao.GetAdminByFields(ctx, req.Identifier, "", "")
+		admin, err = as.adminDao.GetByFields(ctx, req.Identifier, "", "")
 	}
 
 	// 检查用户是否存在
@@ -122,7 +138,7 @@ func ChangePassword(ctx context.Context, req *auth.ChangePasswordRequest) error 
 		entity.UsersColumns.Password:  hashedPassword,
 		entity.UsersColumns.UpdatedAt: time.Now(),
 	}
-	if err := dao.UpdateAdmin(ctx, admin.ID, updates); err != nil {
+	if err := as.adminDao.Update(ctx, admin.ID, updates); err != nil {
 		logger.Logger.Errorf("[ChangePassword] Error updating password for user %s: %v", admin.ID, err)
 		return utils.NewBusinessError(utils.PasswordChangeFailedCode)
 	}
