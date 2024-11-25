@@ -14,17 +14,19 @@ import (
 )
 
 type UserService struct {
-	dao         *dao.UserDao
-	userRoleDao *dao.UserRoleDao
-	roleDao     *dao.RoleDao
+	dao               *dao.UserDao
+	userRoleDao       *dao.UserRoleDao
+	roleDao           *dao.RoleDao
+	userPermissionDao *dao.UserPermissionDao
 }
 
 // NewUserService 创建一个新的 UserService 实例
 func NewUserService() *UserService {
 	return &UserService{
-		dao:         dao.NewUserDao(),
-		userRoleDao: dao.NewUserRoleDao(),
-		roleDao:     dao.NewRoleDao(),
+		dao:               dao.NewUserDao(),
+		userRoleDao:       dao.NewUserRoleDao(),
+		roleDao:           dao.NewRoleDao(),
+		userPermissionDao: dao.NewUserPermissionDao(),
 	}
 }
 
@@ -111,6 +113,12 @@ func (us *UserService) Add(ctx context.Context, req *auth.AddUserRequest) error 
 				logger.Logger.Errorf("[AddUser] Error assigning roles: %v", err)
 				return err
 			}
+
+			// 更新受影响用户的权限记录
+			if err = us.userPermissionDao.UpdateUserPermissionsTx(ctx, tx, []string{user.ID}); err != nil {
+				logger.Logger.Errorf("[AddUser] Error update user permissions: %v", err)
+				return err
+			}
 		}
 
 		return nil
@@ -190,6 +198,12 @@ func (us *UserService) Edit(ctx context.Context, req *auth.EditUserRequest) erro
 				logger.Logger.Errorf("[EditUser] Error assigning new roles: %v", err)
 				return err
 			}
+
+			// 更新受影响用户的权限记录
+			if err = us.userPermissionDao.UpdateUserPermissionsTx(ctx, tx, []string{req.ID}); err != nil {
+				logger.Logger.Errorf("[EditUser] Error update user permissions: %v", err)
+				return err
+			}
 		}
 
 		return nil
@@ -217,6 +231,12 @@ func (us *UserService) Delete(ctx context.Context, req *auth.DelUserRequest) err
 		// 移除用户角色关联
 		if err := us.userRoleDao.RemoveByUserIDTx(ctx, tx, req.ID); err != nil {
 			logger.Logger.Errorf("[DeleteUser] Error removing user roles: %v", err)
+			return err
+		}
+
+		// 删除受影响用户的权限记录
+		if err := us.userPermissionDao.RemoveByUserIDsTx(ctx, tx, []string{req.ID}); err != nil {
+			logger.Logger.Errorf("[DeleteUser] Error update user permissions: %v", err)
 			return err
 		}
 

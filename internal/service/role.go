@@ -14,19 +14,23 @@ import (
 )
 
 type RoleService struct {
-	roleDao     *dao.RoleDao
-	menuDao     *dao.MenuDao
-	pathDao     *dao.PathDao
-	rolePathDao *dao.RolePathDao
+	roleDao           *dao.RoleDao
+	menuDao           *dao.MenuDao
+	pathDao           *dao.PathDao
+	rolePathDao       *dao.RolePathDao
+	userRoleDao       *dao.UserRoleDao
+	userPermissionDao *dao.UserPermissionDao
 }
 
 // NewRoleService 创建一个新的 RoleService 实例
 func NewRoleService() *RoleService {
 	return &RoleService{
-		roleDao:     dao.NewRoleDao(),
-		menuDao:     dao.NewMenuDao(),
-		pathDao:     dao.NewPathDao(),
-		rolePathDao: dao.NewRolePathDao(),
+		roleDao:           dao.NewRoleDao(),
+		menuDao:           dao.NewMenuDao(),
+		pathDao:           dao.NewPathDao(),
+		rolePathDao:       dao.NewRolePathDao(),
+		userRoleDao:       dao.NewUserRoleDao(),
+		userPermissionDao: dao.NewUserPermissionDao(),
 	}
 }
 
@@ -145,6 +149,20 @@ func (rs *RoleService) Edit(ctx context.Context, req *auth.EditRoleRequest) erro
 				logger.Logger.Errorf("[EditRole] Error inserting new role paths: %v", err)
 				return err
 			}
+
+			// **移除与该角色关联的用户权限**
+			// 找出所有关联该角色的用户
+			userIDs, err := rs.userRoleDao.GetUserIDsByRoleIDTx(ctx, tx, req.ID)
+			if err != nil {
+				logger.Logger.Errorf("[EditRole] Error fetching user IDs for role: %v", err)
+				return err
+			}
+
+			// 删除受影响用户的权限记录
+			if err = rs.userPermissionDao.UpdateUserPermissionsTx(ctx, tx, userIDs); err != nil {
+				logger.Logger.Errorf("[EditRole] Error update user permissions: %v", err)
+				return err
+			}
 		}
 
 		return nil
@@ -169,15 +187,29 @@ func (rs *RoleService) Delete(ctx context.Context, req *auth.DelRoleRequest) err
 	}
 
 	if err := db.Client.WithContext(ctx).Transaction(func(tx *gorm.DB) error {
-		// 调用 RoleDao 层进行软删除
-		if err = rs.roleDao.SoftDeleteByIDTx(ctx, tx, req.ID); err != nil {
-			logger.Logger.Errorf("[DeleteRole] Error soft deleting role: %v", err)
+		// 移除角色路径关联
+		if err := rs.rolePathDao.RemoveByRoleIDTx(ctx, tx, req.ID); err != nil {
+			logger.Logger.Errorf("[DeleteRole] Error removing role paths: %v", err)
 			return err
 		}
 
-		// 移除用户角色关联
-		if err := rs.rolePathDao.RemoveByRoleIDTx(ctx, tx, req.ID); err != nil {
-			logger.Logger.Errorf("[DeleteRole] Error removing role paths: %v", err)
+		// **移除与该角色关联的用户权限**
+		// 找出所有关联该角色的用户
+		userIDs, err := rs.userRoleDao.GetUserIDsByRoleIDTx(ctx, tx, req.ID)
+		if err != nil {
+			logger.Logger.Errorf("[DeleteRole] Error fetching user IDs for role: %v", err)
+			return err
+		}
+
+		// 更新受影响用户的权限记录
+		if err = rs.userPermissionDao.UpdateUserPermissionsTx(ctx, tx, userIDs); err != nil {
+			logger.Logger.Errorf("[DeleteRole] Error update user permissions: %v", err)
+			return err
+		}
+
+		// 调用 RoleDao 层进行软删除
+		if err = rs.roleDao.SoftDeleteByIDTx(ctx, tx, req.ID); err != nil {
+			logger.Logger.Errorf("[DeleteRole] Error soft deleting role: %v", err)
 			return err
 		}
 
