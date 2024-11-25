@@ -19,7 +19,6 @@ func InitAuthRouter(routerGroup *gin.RouterGroup) {
 		utils.RegisterRoute(routerGroup, http.MethodPut, "/changPassword", authApi.ChangPassword)
 	}
 
-	// 假设您有一个路由组：/auth
 	authGroup := routerGroup.Group("/auth", middleware.JWTAuth(secret))
 	{
 		adminApi := auth.NewAdminApi()
